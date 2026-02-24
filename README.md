@@ -166,6 +166,27 @@ Key behavior:
 - If a bin has multiple events, the last event in that bin resolves the interval action.
 - `end_interval_dose` is carried forward across `no_change` bins and reset to off-dose on `discontinue`.
 
+## Reduced 4-Action Set
+
+To recode fixed-interval actions into `{increase, decrease, stay, off}`:
+
+```bash
+conda run -n cares-clif-linkage python /Users/davidbeiser/Documents/CLIF-CA-RL/code/recode_action_table_reduced.py \
+  --input-csv /path/to/output/rl_action_table_vaso_inotrope_q60m.csv \
+  --output-csv /path/to/output/rl_action_table_vaso_inotrope_q60m_reduced4.csv \
+  --summary-csv /path/to/output/rl_action_table_vaso_inotrope_q60m_reduced4_summary.csv \
+  --off-threshold 0.0 \
+  --replace-action
+```
+
+Mapping rules:
+
+- `start`/`on` -> `increase`
+- `increase` -> `increase`
+- `decrease` -> `decrease`
+- `discontinue` -> `off`
+- `no_change` -> `stay` if `end_interval_dose > off_threshold`, else `off`
+
 ## Important Notes For Cross-Site Use
 
 - `mar_action_category` and `med_group` mappings can vary by site ETL.
