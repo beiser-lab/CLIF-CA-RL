@@ -133,9 +133,50 @@ conda run -n cares-clif-linkage python /Users/davidbeiser/Documents/CLIF-CA-RL/c
   --summary-csv /path/to/output/rl_action_table_vaso_inotrope_summary.csv
 ```
 
+## Validation
+
+Validate the generated action table and fail fast on invariant violations:
+
+```bash
+conda run -n cares-clif-linkage python /Users/davidbeiser/Documents/CLIF-CA-RL/code/validate_rl_action_table.py \
+  --action-table-csv /path/to/output/rl_action_table_vaso_inotrope.csv \
+  --report-csv /path/to/output/rl_action_table_validation_summary.csv
+```
+
+- Default threshold used by validator logic is `0.0` (same semantics as builder).
+- By default, validator exits with code `1` when any checks fail.
+
+## Fixed-Interval Actions (`no_change`)
+
+For fixed-interval RL models, convert event actions into interval bins and explicitly include `no_change` when no event occurred in the bin:
+
+```bash
+conda run -n cares-clif-linkage python /Users/davidbeiser/Documents/CLIF-CA-RL/code/build_fixed_interval_action_table.py \
+  --event-action-csv /path/to/output/rl_action_table_vaso_inotrope.csv \
+  --output-csv /path/to/output/rl_action_table_vaso_inotrope_q60m.csv \
+  --summary-csv /path/to/output/rl_action_table_vaso_inotrope_q60m_summary.csv \
+  --interval-minutes 60 \
+  --window-mode exposure
+```
+
+Key behavior:
+
+- Bins are generated per `hospitalization_id + med_category + med_dose_unit`.
+- If a bin has no events, action is `no_change`.
+- If a bin has multiple events, the last event in that bin resolves the interval action.
+- `end_interval_dose` is carried forward across `no_change` bins and reset to off-dose on `discontinue`.
+
 ## Important Notes For Cross-Site Use
 
 - `mar_action_category` and `med_group` mappings can vary by site ETL.
 - Keep unit-specific actions separate (`med_dose_unit` is part of the grouping key).
 - If your site has sparse stop charting, keep silent-end inference enabled.
 - If you want strict MAR-only labels, run with `--no-infer-silent-end`.
+
+## Tests
+
+Run the pytest suite:
+
+```bash
+conda run -n cares-clif-linkage pytest /Users/davidbeiser/Documents/CLIF-CA-RL/tests -q
+```
